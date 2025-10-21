@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { Counter } from "./components/counter/Counter";
+import ActivationCardsPage from '@/app/components/activation-cards/ActivationCardsPage';
 
-export default function IndexPage() {
-  return <Counter />;
+export default function Page() {
+  return <ActivationCardsPage />;
 }
-
-export const metadata: Metadata = {
-  title: "Redux Toolkit",
-};

@@ -20,7 +20,7 @@ export const updateStrapiData = async (endpoint: string, id: string | number, da
 
 // 删除Strapi数据
 export const deleteStrapiData = async (endpoint: string, id: string | number) => {
-  return deleteLocal('strapi', { endpoint, id });
+  return deleteLocal('strapi', { body: JSON.stringify({ endpoint, id }) });
 };
 
 // 示例：获取用户列表
