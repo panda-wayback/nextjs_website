@@ -1,11 +1,21 @@
-// A mock function to mimic making an async request for data
-export const fetchCount = async (amount = 1) => {
-  const response = await fetch("http://localhost:3000/api/counter", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount }),
-  });
-  const result: { data: number } = await response.json();
+import { getLocal, postLocal, putLocal, deleteLocal } from "@/lib/utils/fetchLocal";
 
-  return result;
+// 获取当前计数器值
+export const getCount = async () => {
+  return getLocal<number>("counter");
+};
+
+// 增加计数器值
+export const fetchCount = async (amount = 1) => {
+  return postLocal<number>("counter", { amount });
+};
+
+// 设置计数器值
+export const setCount = async (value: number) => {
+  return putLocal<number>("counter", { value });
+};
+
+// 重置计数器
+export const resetCount = async () => {
+  return deleteLocal<number>("counter");
 };
