@@ -1,24 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import axios from "axios";
+import { strapiClient } from "@/lib/utils/strapiConfig";
 
 interface Context {
   params: undefined;
 }
-
-// Strapi配置
-const STRAPI_URL = process.env.STRAPI_URL || "http://localhost:1337";
-const STRAPI_TOKEN = process.env.STRAPI_TOKEN || "";
-
-// 创建axios实例
-const strapiClient = axios.create({
-  baseURL: STRAPI_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    ...(STRAPI_TOKEN && { 'Authorization': `Bearer ${STRAPI_TOKEN}` })
-  },
-  timeout: 10000, // 10秒超时
-});
 
 // GET方法 - 从Strapi获取数据
 export async function GET(request: NextRequest, context: Context) {

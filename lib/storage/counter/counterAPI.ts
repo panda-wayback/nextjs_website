@@ -1,4 +1,4 @@
-import { getLocal, postLocal, putLocal, deleteLocal } from "@/lib/utils/fetchLocal";
+import { getLocal, postLocal, putLocal, deleteLocal } from "@/app/utils/fetchLocal";
 
 // 获取当前计数器值
 export const getCount = async () => {

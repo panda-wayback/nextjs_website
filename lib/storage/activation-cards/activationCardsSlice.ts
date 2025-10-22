@@ -1,7 +1,7 @@
-import { createAppSlice } from "@/lib/createAppSlice";
-import type { AppThunk } from "@/lib/store";
+import { createAppSlice } from "@/lib/storage/createAppSlice";
+import type { AppThunk } from "@/lib/storage/store";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import { 
   getActivationCards, 
   createActivationCard, 
@@ -128,18 +128,6 @@ export const activationCardsSlice = createAppSlice({
     // 根据类型筛选卡片
     selectCardsByType: (state) => (type: string) => 
       state.cards.filter(card => card.card_type === type),
-    
-    // 获取未使用的卡片
-    selectUnusedCards: (state) => 
-      state.cards.filter(card => card.activation_status === "unused"),
-    
-    // 获取已使用的卡片
-    selectUsedCards: (state) => 
-      state.cards.filter(card => card.activation_status === "used"),
-    
-    // 获取过期的卡片
-    selectExpiredCards: (state) => 
-      state.cards.filter(card => card.activation_status === "expired"),
   },
 });
 
@@ -148,7 +136,9 @@ export const fetchActivationCards = createAsyncThunk(
   "activationCards/fetchActivationCards",
   async () => {
     const response = await getActivationCards();
-    return response.data;
+    // Strapi返回的数据结构是 { data: [...], meta: {...} }
+    // 我们的API又包装了一层 { data: { data: [...], meta: {...} } }
+    return response.data?.data || response.data || [];
   }
 );
 
@@ -157,7 +147,9 @@ export const createNewActivationCard = createAsyncThunk(
   "activationCards/createNewActivationCard",
   async (data: CreateActivationCardData) => {
     const response = await createActivationCard(data);
-    return response.data;
+    // Strapi返回的数据结构是 { data: {...} }
+    // 我们的API又包装了一层 { data: { data: {...} } }
+    return response.data?.data || response.data;
   }
 );
 
@@ -166,7 +158,9 @@ export const fetchActivationCardById = createAsyncThunk(
   "activationCards/fetchActivationCardById",
   async (id: string | number) => {
     const response = await getActivationCardById(id);
-    return response.data;
+    // Strapi返回的数据结构是 { data: {...} }
+    // 我们的API又包装了一层 { data: { data: {...} } }
+    return response.data?.data || response.data;
   }
 );
 
@@ -188,10 +182,23 @@ export const {
   selectCreateError,
   selectCardsByStatus,
   selectCardsByType,
-  selectUnusedCards,
-  selectUsedCards,
-  selectExpiredCards,
 } = activationCardsSlice.selectors;
+
+// 优化的选择器，使用createSelector避免不必要的重新渲染
+export const selectUnusedCards = createSelector(
+  [selectAllCards],
+  (cards) => Array.isArray(cards) ? cards.filter(card => card.activation_status === "unused") : []
+);
+
+export const selectUsedCards = createSelector(
+  [selectAllCards],
+  (cards) => Array.isArray(cards) ? cards.filter(card => card.activation_status === "used") : []
+);
+
+export const selectExpiredCards = createSelector(
+  [selectAllCards],
+  (cards) => Array.isArray(cards) ? cards.filter(card => card.activation_status === "expired") : []
+);
 
 // 手动thunk：批量创建激活卡
 export const createMultipleActivationCards = 

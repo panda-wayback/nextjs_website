@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '@/lib/store';
+import { RootState, AppDispatch } from '@/lib/storage/store';
 import {
   fetchActivationCards,
   createNewActivationCard,

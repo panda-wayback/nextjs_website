@@ -1,4 +1,4 @@
-import { getLocal, postLocal, putLocal, deleteLocal } from "@/lib/utils/fetchLocal";
+import { getLocal, postLocal, putLocal, deleteLocal } from "@/app/utils/fetchLocal";
 
 // 使用 fetchLocal 封装调用 Strapi API
 // 这样就不需要重复写 URL 前缀和 headers 了
