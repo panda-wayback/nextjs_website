@@ -6,9 +6,9 @@ import { strapiClient } from "@/lib/utils/strapiConfig";
 export interface ActivationCard {
   id?: number;
   code: string;
-  card_type: "test" | "day" | "week" | "month";
-  activation_status: "unused" | "used" | "expired";
-  activated_at?: string;
+  card_type: "test" | "day" | "week" | "month" | "year";
+  activation_status: "unused" | "used" | "expired" | "disabled";
+  used_at?: string;
   expires_at?: string;
   note?: string;
   createdAt?: string;
@@ -20,7 +20,6 @@ export interface ActivationCard {
 export interface CreateActivationCardData {
   card_type: "test" | "day" | "week" | "month";
   note?: string;
-  expires_at?: string;
 }
 
 // GET方法 - 获取激活卡列表
@@ -68,7 +67,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { card_type, note, expires_at } = body;
+    const { card_type, note } = body;
     
     // 验证必填字段
     if (!card_type) {
@@ -87,24 +86,12 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 生成激活码（简单的随机字符串）
-    const generateActivationCode = () => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let result = '';
-      for (let i = 0; i < 12; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;
-    };
-    
     // 准备创建数据
     const createData = {
       data: {
-        code: generateActivationCode(),
         card_type,
         activation_status: "unused",
         note: note || null,
-        expires_at: expires_at || null,
       }
     };
     
