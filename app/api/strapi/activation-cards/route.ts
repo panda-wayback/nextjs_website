@@ -1,57 +1,58 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { strapiClient } from "@/lib/utils/strapiConfig";
+import type {
+  ActivationCardStatus,
+  ActivationCardType,
+  CreateActivationCardData
+} from "./types";
 
-// 激活卡数据类型定义
-export interface ActivationCard {
-  id?: number;
-  code: string;
-  card_type: "test" | "day" | "week" | "month" | "year";
-  activation_status: "unused" | "used" | "expired" | "disabled";
-  used_at?: string;
-  expires_at?: string;
-  note?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  publishedAt?: string;
+interface Context {
+  params: undefined;
 }
 
-// 创建激活卡的数据类型
-export interface CreateActivationCardData {
-  card_type: "test" | "day" | "week" | "month";
-  note?: string;
+// 生成激活码
+function generateActivationCode(): string {
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `AC${timestamp}${random}`;
 }
 
 // GET方法 - 获取激活卡列表
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, context: Context) {
   try {
     const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const type = searchParams.get('type');
     const populate = searchParams.get('populate') || '*';
-    const status = searchParams.get('status'); // 可选：按状态筛选
-    const type = searchParams.get('type'); // 可选：按类型筛选
+    const sort = searchParams.get('sort') || 'createdAt:desc';
     
-    // 构建Strapi API URL
-    let apiUrl = `/activation-cards?populate=${populate}`;
+    console.log(`[激活卡API] GET请求`, { status, type, populate, sort });
     
-    // 添加筛选参数
+    // 构建查询参数
+    let queryParams = `populate=${populate}&sort=${sort}`;
+    
+    // 添加筛选条件
     if (status) {
-      apiUrl += `&filters[activation_status][$eq]=${status}`;
+      queryParams += `&filters[activation_status][$eq]=${status}`;
     }
     if (type) {
-      apiUrl += `&filters[card_type][$eq]=${type}`;
+      queryParams += `&filters[card_type][$eq]=${type}`;
     }
+    
+    // 构建Strapi API URL
+    const apiUrl = `/api/activation-cards?${queryParams}`;
     
     // 调用Strapi API
     const response = await strapiClient.get(apiUrl);
     
     return NextResponse.json({
       data: response.data,
-      message: "获取激活卡列表成功",
-      count: response.data?.data?.length || 0
+      message: "获取激活卡列表成功"
     });
 
   } catch (error: any) {
-    console.error('获取激活卡列表失败:', error.message);
+    console.error('获取激活卡列表错误:', error.message);
     
     return NextResponse.json(
       { 
@@ -63,57 +64,187 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST方法 - 创建新激活卡
-export async function POST(request: NextRequest) {
+// POST方法 - 创建激活卡
+export async function POST(request: NextRequest, context: Context) {
   try {
-    const body = await request.json();
-    const { card_type, note } = body;
+    const body: CreateActivationCardData = await request.json();
+    const { card_type, note, expires_at, count = 1 } = body;
     
-    // 验证必填字段
     if (!card_type) {
       return NextResponse.json(
-        { error: "缺少必填字段: card_type" },
+        { error: "缺少card_type参数" },
         { status: 400 }
       );
     }
-    
-    // 验证card_type值
-    const validTypes = ["test", "day", "week", "month"];
-    if (!validTypes.includes(card_type)) {
-      return NextResponse.json(
-        { error: "无效的card_type，必须是: test, day, week, month" },
-        { status: 400 }
-      );
-    }
-    
-    // 准备创建数据
-    const createData = {
-      data: {
-        card_type,
-        activation_status: "unused",
-        note: note || null,
+
+    console.log(`[激活卡API] 创建激活卡`, { card_type, note, expires_at, count });
+
+    // 批量创建激活卡
+    if (count > 1) {
+      const activationCards: any[] = [];
+      
+      for (let i = 0; i < count; i++) {
+        const cardData = {
+          code: generateActivationCode(),
+          card_type,
+          activation_status: "unassigned" as ActivationCardStatus,
+          note,
+          expires_at
+        };
+        activationCards.push(cardData);
       }
-    };
-    
-    // 调用Strapi API创建激活卡
-    const response = await strapiClient.post('/activation-cards', createData);
-    
-    return NextResponse.json({
-      data: response.data,
-      message: "激活卡创建成功"
-    });
+      
+      const response = await strapiClient.post('/api/activation-cards', {
+        data: activationCards
+      });
+      
+      return NextResponse.json({
+        data: response.data,
+        message: `成功创建${count}张激活卡`,
+        count: count
+      });
+    } else {
+      // 单个创建激活卡
+      const cardData = {
+        code: generateActivationCode(),
+        card_type,
+        activation_status: "unassigned" as ActivationCardStatus,
+        note,
+        expires_at
+      };
+      
+      const response = await strapiClient.post('/api/activation-cards', {
+        data: cardData
+      });
+      
+      return NextResponse.json({
+        data: response.data,
+        message: "激活卡创建成功"
+      });
+    }
 
   } catch (error: any) {
-    console.error('创建激活卡失败:', error.message);
-    console.error('错误详情:', error.response?.data);
-    console.error('状态码:', error.response?.status);
+    console.error('创建激活卡错误:', error.message);
     
     return NextResponse.json(
       { 
         error: "创建激活卡失败",
-        details: error.response?.data || error.message,
-        status: error.response?.status || 500,
-        url: error.config?.url
+        details: error.response?.data || error.message 
+      },
+      { status: error.response?.status || 500 }
+    );
+  }
+}
+
+// PUT方法 - 使用激活卡（分配、激活、过期）
+export async function PUT(request: NextRequest, context: Context) {
+  try {
+    const body = await request.json();
+    const { id, action, assigned_to } = body;
+    
+    if (!id || !action) {
+      return NextResponse.json(
+        { error: "缺少id或action参数" },
+        { status: 400 }
+      );
+    }
+
+    console.log(`[激活卡API] 使用激活卡`, { id, action, assigned_to });
+
+    let updateData: any = {};
+    let message = "";
+
+    switch (action) {
+      case "assign":
+        // 分配激活卡给用户
+        updateData = {
+          activation_status: "assigned" as ActivationCardStatus,
+          assigned_to: assigned_to,
+          assigned_at: new Date().toISOString()
+        };
+        message = "激活卡分配成功";
+        break;
+        
+      case "activate":
+        // 激活激活卡
+        updateData = {
+          activation_status: "used" as ActivationCardStatus,
+          activated_at: new Date().toISOString()
+        };
+        message = "激活卡激活成功";
+        break;
+        
+      case "expire":
+        // 标记激活卡为过期
+        updateData = {
+          activation_status: "expired" as ActivationCardStatus
+        };
+        message = "激活卡已标记为过期";
+        break;
+        
+      default:
+        return NextResponse.json(
+          { error: "无效的action参数，支持的值：assign, activate, expire" },
+          { status: 400 }
+        );
+    }
+    
+    // 更新激活卡
+    const response = await strapiClient.put(`/api/activation-cards/${id}`, {
+      data: updateData
+    });
+    
+    return NextResponse.json({
+      data: response.data,
+      message: message,
+      id: id,
+      action: action
+    });
+
+  } catch (error: any) {
+    console.error('使用激活卡错误:', error.message);
+    
+    return NextResponse.json(
+      { 
+        error: "使用激活卡失败",
+        details: error.response?.data || error.message 
+      },
+      { status: error.response?.status || 500 }
+    );
+  }
+}
+
+// DELETE方法 - 删除激活卡
+export async function DELETE(request: NextRequest, context: Context) {
+  try {
+    const body = await request.json();
+    const { id } = body;
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: "缺少id参数" },
+        { status: 400 }
+      );
+    }
+
+    console.log(`[激活卡API] 删除激活卡`, { id });
+    
+    // 删除激活卡
+    const response = await strapiClient.delete(`/api/activation-cards/${id}`);
+    
+    return NextResponse.json({
+      data: response.data,
+      message: "激活卡删除成功",
+      id: id
+    });
+
+  } catch (error: any) {
+    console.error('删除激活卡错误:', error.message);
+    
+    return NextResponse.json(
+      { 
+        error: "删除激活卡失败",
+        details: error.response?.data || error.message 
       },
       { status: error.response?.status || 500 }
     );
