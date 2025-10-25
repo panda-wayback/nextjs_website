@@ -7,12 +7,7 @@ interface Context {
   params: undefined;
 }
 
-// 生成激活码
-function generateActivationCode(): string {
-  const timestamp = Date.now().toString().slice(-6);
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `AC${timestamp}${random}`;
-}
+// 不再需要手动生成激活码，Strapi会自动生成
 
 // POST方法 - 创建激活卡并立即分配给用户
 export async function POST(request: NextRequest, context: Context) {
@@ -30,8 +25,7 @@ export async function POST(request: NextRequest, context: Context) {
     console.log(`[激活卡业务API] 创建并分配激活卡`, { card_type, assigned_to, note, expires_at });
 
     // 第一步：创建激活卡
-    const cardData = {
-      code: generateActivationCode(),
+    const cardData: any = {
       card_type,
       activation_status: "unassigned" as ActivationCardStatus,
       note,
@@ -42,23 +36,29 @@ export async function POST(request: NextRequest, context: Context) {
       data: cardData
     });
     
-    const createdCard: ActivationCard = createResponse.data?.data;
+    const createdCard: any = createResponse.data?.data;
     
-    if (!createdCard || !createdCard.id) {
+    console.log('[激活卡业务API] 创建响应:', JSON.stringify(createResponse.data, null, 2));
+    
+    if (!createdCard) {
       return NextResponse.json(
-        { error: "激活卡创建失败" },
+        { error: "激活卡创建失败", details: createResponse.data },
         { status: 500 }
       );
     }
 
     // 第二步：立即分配激活卡给用户
-    const assignData = {
+    // 由于Strapi中没有assigned_to字段，我们使用user_id字段
+    const assignData: any = {
       activation_status: "assigned" as ActivationCardStatus,
-      assigned_to: assigned_to,
-      assigned_at: new Date().toISOString()
+      user_id: assigned_to,
     };
     
-    const assignResponse = await strapiClient.put(`/api/activation-cards/${createdCard.id}`, {
+    // 尝试使用 documentId 而不是 id
+    const documentId = createdCard.documentId || createdCard.id;
+    console.log(`[激活卡业务API] 更新激活卡`, { id: createdCard.id, documentId, assignData });
+    
+    const assignResponse = await strapiClient.put(`/api/activation-cards/${documentId}`, {
       data: assignData
     });
     
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest, context: Context) {
         id: createdCard.id,
         code: createdCard.code,
         card_type: createdCard.card_type,
-        assigned_to: assigned_to,
+        user_id: assigned_to,
         activation_status: "assigned"
       }
     });

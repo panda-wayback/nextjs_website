@@ -11,13 +11,6 @@ interface Context {
   params: undefined;
 }
 
-// 生成激活码
-function generateActivationCode(): string {
-  const timestamp = Date.now().toString().slice(-6);
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `AC${timestamp}${random}`;
-}
-
 // GET方法 - 获取激活卡列表
 export async function GET(request: NextRequest, context: Context) {
   try {
@@ -84,8 +77,7 @@ export async function POST(request: NextRequest, context: Context) {
       const activationCards: any[] = [];
       
       for (let i = 0; i < count; i++) {
-        const cardData = {
-          code: generateActivationCode(),
+        const cardData: any = {
           card_type,
           activation_status: "unassigned" as ActivationCardStatus,
           note,
@@ -105,8 +97,7 @@ export async function POST(request: NextRequest, context: Context) {
       });
     } else {
       // 单个创建激活卡
-      const cardData = {
-        code: generateActivationCode(),
+      const cardData: any = {
         card_type,
         activation_status: "unassigned" as ActivationCardStatus,
         note,
@@ -125,11 +116,18 @@ export async function POST(request: NextRequest, context: Context) {
 
   } catch (error: any) {
     console.error('创建激活卡错误:', error.message);
+    console.error('错误详情:', error.response?.data);
+    console.error('完整错误:', error);
     
     return NextResponse.json(
       { 
         error: "创建激活卡失败",
-        details: error.response?.data || error.message 
+        details: error.response?.data || error.message,
+        debug: {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          config: error.config?.url
+        }
       },
       { status: error.response?.status || 500 }
     );
