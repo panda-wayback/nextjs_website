@@ -1,14 +1,17 @@
 ### 激活卡 API 测试
 ### 需要安装 REST Client 插件 (VS Code: humao.rest-client)
 
+@baseUrl = http://localhost:3003
+@apiPath = /api/strapi/activation-cards
+
 ### 1. 获取激活卡列表
-GET http://localhost:3003/api/strapi/activation-cards
+GET {{baseUrl}}{{apiPath}}
 
 ### 2. 获取未分配的激活卡
-GET http://localhost:3000/api/strapi/activation-cards?status=unassigned
+GET {{baseUrl}}{{apiPath}}?status=unassigned
 
 ### 3. 创建激活卡
-POST http://localhost:3000/api/strapi/activation-cards
+POST {{baseUrl}}{{apiPath}}
 Content-Type: application/json
 
 {
@@ -17,7 +20,7 @@ Content-Type: application/json
 }
 
 ### 4. 创建并分配激活卡
-POST http://localhost:3000/api/strapi/activation-cards/create-and-assign
+POST {{baseUrl}}{{apiPath}}/create-and-assign
 Content-Type: application/json
 
 {
@@ -27,7 +30,7 @@ Content-Type: application/json
 }
 
 ### 5. 使用激活卡（根据ID）
-POST http://localhost:3000/api/strapi/activation-cards/use-card/1
+POST {{baseUrl}}{{apiPath}}/use-card/1
 Content-Type: application/json
 
 {
@@ -35,7 +38,7 @@ Content-Type: application/json
 }
 
 ### 6. 使用激活卡（根据激活码）
-POST http://localhost:3000/api/strapi/activation-cards/use-card/by-code
+POST {{baseUrl}}{{apiPath}}/use-card/by-code
 Content-Type: application/json
 
 {
@@ -44,4 +47,4 @@ Content-Type: application/json
 }
 
 ### 7. 获取统计信息
-GET http://localhost:3000/api/strapi/activation-cards/stats
+GET {{baseUrl}}{{apiPath}}/stats
