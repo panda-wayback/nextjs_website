@@ -9,14 +9,16 @@ export type ActivationCardType = "test" | "day" | "week" | "month";
 // 激活卡完整数据结构
 export interface ActivationCard {
   id: number;
+  documentId?: string; // Strapi文档ID
   code: string; // 激活码，格式：AC + 时间戳后6位 + 随机4位数字
   card_type: ActivationCardType; // 激活卡类型
   activation_status: ActivationCardStatus; // 激活卡状态
   user_id?: string; // 绑定的用户ID
   assigned_to?: string; // 分配给的用户（旧字段，可选）
   assigned_at?: string; // 分配时间
-  activated_at?: string; // 激活时间
+  used_at?: string; // 使用时间（注意：实际字段名是 used_at，不是 activated_at）
   expires_at?: string; // 过期时间
+  metadata?: any; // 元数据
   note?: string; // 备注
   createdAt: string; // 创建时间
   updatedAt: string; // 更新时间
@@ -39,7 +41,7 @@ export interface UpdateActivationCardData {
   user_id?: string;
   assigned_to?: string;
   assigned_at?: string;
-  activated_at?: string;
+  used_at?: string; // 使用时间（注意：实际字段名是 used_at）
   expires_at?: string;
   note?: string;
 }
@@ -65,7 +67,8 @@ export interface ActivationCardUseResponse {
     card_type: ActivationCardType;
     activation_status: ActivationCardStatus;
     user_id?: string;
-    activated_at?: string;
+    used_at?: string;
+    expires_at?: string;
   };
   error?: string;
 }

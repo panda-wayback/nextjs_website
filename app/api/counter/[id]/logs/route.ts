@@ -2,12 +2,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 interface Context {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET方法 - 获取特定计数器的日志
 export async function GET(request: NextRequest, context: Context) {
-  const { id } = context.params;
+  const { id } = await context.params;
   
   // 模拟获取日志数据
   const logs = [

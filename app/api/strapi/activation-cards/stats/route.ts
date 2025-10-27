@@ -89,8 +89,8 @@ export async function GET(request: NextRequest, context: Context) {
         }
       }
       
-      if (card.activated_at) {
-        const activatedDate = new Date(card.activated_at);
+      if (card.used_at) {
+        const activatedDate = new Date(card.used_at);
         if (activatedDate >= sevenDaysAgo) {
           stats.recentActivity.activatedLast7Days++;
         }

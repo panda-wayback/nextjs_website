@@ -167,7 +167,7 @@ export async function PUT(request: NextRequest, context: Context) {
         // 激活激活卡
         updateData = {
           activation_status: "used" as ActivationCardStatus,
-          activated_at: new Date().toISOString()
+          used_at: new Date().toISOString()
         };
         message = "激活卡激活成功";
         break;

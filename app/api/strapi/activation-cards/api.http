@@ -1,5 +1,12 @@
 ### 激活卡 API 测试
 ### 需要安装 REST Client 插件 (VS Code: humao.rest-client)
+###
+### 注意事项：
+### - 使用激活卡时，会根据 card_type 自动计算过期时间
+###   - test: 2小时
+###   - day: 1天
+###   - week: 1周
+###   - month: 1个月
 
 @baseUrl = http://localhost:3003
 @apiPath = /api/strapi/activation-cards
@@ -29,8 +36,8 @@ Content-Type: application/json
   "note": "测试创建并分配"
 }
 
-### 5. 使用激活卡（根据ID）
-POST {{baseUrl}}{{apiPath}}/use-card/1
+### 5. 使用激活卡（根据ID，使用 documentId）
+POST {{baseUrl}}{{apiPath}}/use-card/ogrrm00augdf6c87cfa32gga
 Content-Type: application/json
 
 {

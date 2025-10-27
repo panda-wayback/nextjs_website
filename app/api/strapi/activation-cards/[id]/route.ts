@@ -3,13 +3,13 @@ import { NextResponse } from "next/server";
 import { strapiClient } from "@/lib/utils/strapiConfig";
 
 interface Context {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET方法 - 根据ID获取激活卡详情
 export async function GET(request: NextRequest, context: Context) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const { searchParams } = new URL(request.url);
     const populate = searchParams.get('populate') || '*';
     
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest, context: Context) {
 // PUT方法 - 更新激活卡
 export async function PUT(request: NextRequest, context: Context) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const body = await request.json();
     
     console.log(`[激活卡API] 更新激活卡`, { id, data: body });
@@ -90,7 +90,7 @@ export async function PUT(request: NextRequest, context: Context) {
 // DELETE方法 - 删除激活卡
 export async function DELETE(request: NextRequest, context: Context) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     
     console.log(`[激活卡API] 删除激活卡`, { id });
     

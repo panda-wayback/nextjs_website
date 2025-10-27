@@ -2,12 +2,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 interface Context {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET方法 - 根据ID获取特定计数器
 export async function GET(request: NextRequest, context: Context) {
-  const { id } = context.params;
+  const { id } = await context.params;
   
   // 模拟根据ID获取计数器数据
   const counter = {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, context: Context) {
 
 // PUT方法 - 更新特定计数器
 export async function PUT(request: NextRequest, context: Context) {
-  const { id } = context.params;
+  const { id } = await context.params;
   const body: { name?: string; value?: number } = await request.json();
 
   // 模拟更新操作
@@ -52,7 +52,7 @@ export async function PUT(request: NextRequest, context: Context) {
 
 // DELETE方法 - 删除特定计数器
 export async function DELETE(request: NextRequest, context: Context) {
-  const { id } = context.params;
+  const { id } = await context.params;
 
   // 模拟删除操作
   return NextResponse.json({
