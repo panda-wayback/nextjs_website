@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { strapiClient } from "@/lib/utils/strapiConfig";
+import { getStrapiClient } from "@/lib/utils/strapiConfig";
 import type { ActivationCard, ActivationCardStatus } from "../types";
 
 // 不再需要手动生成激活码，Strapi会自动生成
@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
       expires_at
     };
     
+    const strapiClient = await getStrapiClient();
     const cards = strapiClient.collection('activation-cards');
     const createResponse: any = await cards.create(cardData);
     

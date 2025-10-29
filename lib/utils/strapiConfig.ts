@@ -1,20 +1,25 @@
 import { strapi } from "@strapi/client";
+import { promises as fs } from "fs";
+import path from "path";
 
-// 获取 Strapi 配置（支持客户端动态配置）
-export const getStrapiConfig = () => {
-  // 客户端：从 localStorage 读取
-  if (typeof window !== "undefined") {
-    const saved = localStorage.getItem("strapiConfig");
-    if (saved) {
-      try {
-        const config = JSON.parse(saved);
-        return {
-          url: config.strapi.url,
-          token: config.strapi.token,
-        };
-      } catch (e) {
-        console.error("解析配置失败:", e);
-      }
+const CONFIG_FILE = path.join(process.cwd(), "config", "strapi.json");
+
+// 获取 Strapi 配置（仅从配置文件读取）
+export const getStrapiConfig = async () => {
+  try {
+    const configData = await fs.readFile(CONFIG_FILE, "utf-8");
+    const parsed = JSON.parse(configData);
+    
+    if (parsed.strapi?.url) {
+      return {
+        url: parsed.strapi.url,
+        token: parsed.strapi.token || "",
+      };
+    }
+  } catch (e: any) {
+    // 如果文件不存在或读取失败，使用环境变量作为默认值
+    if (e.code !== "ENOENT") {
+      console.error("读取配置文件失败:", e);
     }
   }
   
@@ -25,13 +30,10 @@ export const getStrapiConfig = () => {
   };
 };
 
-// Strapi配置（保持向后兼容）
-export const STRAPI_URL = getStrapiConfig().url;
-export const STRAPI_TOKEN = getStrapiConfig().token;
-
-// 创建 Strapi Client 实例（动态配置）
-export const createStrapiClient = () => {
-  const config = getStrapiConfig();
+// 创建 Strapi Client 实例（动态配置，每次调用都从配置文件获取最新配置）
+export const createStrapiClient = async () => {
+  const config = await getStrapiConfig();
+  
   // 确保 baseURL 包含 /api 路径
   const baseURL = config.url.endsWith('/api') 
     ? config.url 
@@ -39,9 +41,12 @@ export const createStrapiClient = () => {
   
   return strapi({
     baseURL,
-    auth: "0fea4c14562542f544b2c748c1d514b60272f9d4ffcd6b1d1a17d2951793e9183220ec40902e40eeda8f8a34196aafd7d631fb8813e84b43dc39ddb4a525e0884bbbbe3a7e9b3fb0695d696f2c73b3357b9ab851b47994c956a03ba4e13452f9e5d5e63e762ba7d5ff4060908911b026f867f0f1ef18ccc34bd199b90f89100b",
+    auth: config.token || undefined,
   });
 };
 
-// 默认客户端实例（保持向后兼容）
-export const strapiClient = createStrapiClient();
+// 获取 Strapi Client 实例（每次调用都创建新实例以获取最新配置）
+// 这样可以确保当配置文件更新时，立即生效
+export const getStrapiClient = async () => {
+  return await createStrapiClient();
+};

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { strapiClient } from "@/lib/utils/strapiConfig";
+import { getStrapiClient } from "@/lib/utils/strapiConfig";
 import type { ActivationCard } from "../types";
 
 // 根据激活卡类型计算过期时间
@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
     
     console.log(`[激活卡业务API] 查询或激活激活码（通过documentId）`, { documentId, user_id });
 
-    // 查找激活卡 - 使用 Strapi Client
+    // 查找激活卡 - 使用 Strapi Client（每次获取最新配置）
+    const strapiClient = await getStrapiClient();
     const cards = strapiClient.collection('activation-cards');
     const cardData = await cards.findOne(documentId, { populate: '*' });
     console.log('[激活卡业务API] 查询结果 cardData:', cardData);
@@ -114,6 +115,7 @@ async function checkAndMarkExpired(card: ActivationCard): Promise<boolean> {
     const updateId = card.documentId || card.id;
     console.log('[激活卡业务API] 标记激活卡为过期:', { updateId, expires_at: card.expires_at });
     try {
+      const strapiClient = await getStrapiClient();
       const cards = strapiClient.collection('activation-cards');
       await cards.update(updateId, { activation_status: "expired" });
     } catch (error: any) {
@@ -127,13 +129,14 @@ async function checkAndMarkExpired(card: ActivationCard): Promise<boolean> {
 }
 
 // 激活激活码
-async function activateCard(card: ActivationCard, user_id: string) {
+async function activateCard(card: ActivationCard, user_id: string, request?: NextRequest) {
   const updateId = card.documentId || card.id;
   const expires_at = calculateExpirationDate(card.card_type);
   const used_at = new Date().toISOString();
   
   console.log('[激活卡业务API] 激活激活卡:', { updateId, user_id, card_type: card.card_type, expires_at });
   
+  const strapiClient = await getStrapiClient();
   const cards = strapiClient.collection('activation-cards');
   await cards.update(updateId, {
     activation_status: "used",

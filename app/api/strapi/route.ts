@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { strapiClient } from "@/lib/utils/strapiConfig";
+import { getStrapiClient } from "@/lib/utils/strapiConfig";
 
 // GET方法 - 从Strapi获取数据
 export async function GET(request: NextRequest) {
@@ -56,7 +56,8 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // 使用 Strapi Client - 通过 collection 方法支持通用 endpoint
+    // 使用 Strapi Client - 通过 collection 方法支持通用 endpoint（每次获取最新配置）
+    const strapiClient = await getStrapiClient();
     const startTime = Date.now();
     const result = await strapiClient.collection(endpoint).find(queryParams);
     const responseTime = Date.now() - startTime;
@@ -106,7 +107,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 使用 Strapi Client
+    // 使用 Strapi Client（每次获取最新配置）
+    const strapiClient = await getStrapiClient();
     const collection = strapiClient.collection(endpoint);
     const result = await collection.create(data);
     
@@ -142,7 +144,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 使用 Strapi Client
+    // 使用 Strapi Client（每次获取最新配置）
+    const strapiClient = await getStrapiClient();
     const collection = strapiClient.collection(endpoint);
     const result = await collection.update(id, data);
     
@@ -179,7 +182,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 使用 Strapi Client
+    // 使用 Strapi Client（每次获取最新配置）
+    const strapiClient = await getStrapiClient();
     const collection = strapiClient.collection(endpoint);
     const result = await collection.delete(id);
     

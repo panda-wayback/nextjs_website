@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { strapiClient } from "@/lib/utils/strapiConfig";
+import { getStrapiClient } from "@/lib/utils/strapiConfig";
 import type { ActivationCard, ActivationCardStats } from "../types";
 
 // GET方法 - 获取激活卡统计信息
@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
   try {
     console.log(`[激活卡API] 获取统计信息`);
     
-    // 获取所有激活卡数据 - 使用 Strapi Client
+    // 获取所有激活卡数据 - 使用 Strapi Client（每次获取最新配置）
+    const strapiClient = await getStrapiClient();
     const cardsCollection = strapiClient.collection('activation-cards');
     const result = await cardsCollection.find({ 
       pagination: { pageSize: 1000 } 

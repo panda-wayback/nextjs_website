@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { strapiClient } from "@/lib/utils/strapiConfig";
+import { getStrapiClient } from "@/lib/utils/strapiConfig";
 import type {
   ActivationCardStatus,
   ActivationCardType,
@@ -38,7 +38,8 @@ export async function GET(request: NextRequest) {
       };
     }
     
-    // 使用 Strapi Client
+    // 使用 Strapi Client（每次获取最新配置）
+    const strapiClient = await getStrapiClient();
     const cards = strapiClient.collection('activation-cards');
     const result = await cards.find(queryParamsObj);
     
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
         activationCards.push(cardData);
       }
       
+      const strapiClient = await getStrapiClient();
       const cards = strapiClient.collection('activation-cards');
       const results = await Promise.all(
         activationCards.map(cardData => cards.create(cardData))
@@ -108,6 +110,7 @@ export async function POST(request: NextRequest) {
         expires_at
       };
       
+      const strapiClient = await getStrapiClient();
       const cards = strapiClient.collection('activation-cards');
       const result = await cards.create(cardData);
       
@@ -191,6 +194,7 @@ export async function PUT(request: NextRequest) {
     }
     
     // 更新激活卡
+    const strapiClient = await getStrapiClient();
     const cards = strapiClient.collection('activation-cards');
     const result = await cards.update(id, updateData);
     
@@ -230,6 +234,7 @@ export async function DELETE(request: NextRequest) {
     console.log(`[激活卡API] 删除激活卡`, { id });
     
     // 删除激活卡
+    const strapiClient = await getStrapiClient();
     const cards = strapiClient.collection('activation-cards');
     const result = await cards.delete(id);
     
