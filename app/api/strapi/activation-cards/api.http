@@ -31,7 +31,7 @@ POST {{baseUrl}}{{apiPath}}/create-and-assign
 Content-Type: application/json
 
 {
-  "card_type": "day",
+  "card_type": "year",
   "assigned_to": "user@example.com",
   "note": "测试创建并分配"
 }

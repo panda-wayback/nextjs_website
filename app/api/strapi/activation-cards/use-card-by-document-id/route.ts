@@ -75,17 +75,28 @@ export async function GET(request: NextRequest) {
     
     const cardStatus = card.activation_status || "unassigned";
     
-    // 检查过期状态
-    const isExpired = await checkAndMarkExpired(card);
-    if (isExpired) {
-      return NextResponse.json({ error: "激活卡已过期" }, { status: 400 });
+    // 检查过期状态（只在有过期时间时检查）
+    if (card.expires_at) {
+      const isExpired = await checkAndMarkExpired(card, request);
+      if (isExpired) {
+        return NextResponse.json({ error: "激活卡已过期" }, { status: 400 });
+      }
     }
 
     // 根据状态处理
     switch (cardStatus) {
       case "unassigned":
-        return await activateCard(card, user_id);
+        // 未分配状态，首次激活
+        return await activateCard(card, user_id, request);
+      case "assigned":
+        // 已分配状态，如果还没有激活时间和过期时间，需要首次激活
+        if (!card.used_at || !card.expires_at) {
+          return await activateCard(card, user_id, request);
+        }
+        // 如果已激活过，验证用户
+        return verifyUser(card, user_id);
       case "used":
+        // 已使用状态，验证用户
         return verifyUser(card, user_id);
       default:
         return getCardInfo(card);
@@ -104,7 +115,7 @@ export async function GET(request: NextRequest) {
 }
 
 // 检查并标记过期
-async function checkAndMarkExpired(card: ActivationCard): Promise<boolean> {
+async function checkAndMarkExpired(card: ActivationCard, request: NextRequest): Promise<boolean> {
   if (!card.expires_at) return false;
   
   const expireDate = new Date(card.expires_at);
