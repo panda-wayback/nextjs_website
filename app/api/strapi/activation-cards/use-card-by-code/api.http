@@ -1,7 +1,0 @@
-### 激活码查询/激活 API 测试
-
-@baseUrl = http://localhost:3003
-@apiPath = /api/strapi/activation-cards/use-card-by-code
-
-### 1. 首次激活激活码（需要 user_id）
-GET {{baseUrl}}{{apiPath}}?code=OEHL58LCBSMXOU759E&user_id=user@example.com1
