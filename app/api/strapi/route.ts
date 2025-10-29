@@ -28,34 +28,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 构建Strapi API URL
-    let apiUrl = `/api/${endpoint}?populate=${populate}`;
+    // 构建查询参数对象
+    const queryParams: any = {
+      populate: populate === '*' ? '*' : populate.split(','),
+    };
     
     // 添加筛选参数
     if (filters) {
-      apiUrl += `&filters=${encodeURIComponent(filters)}`;
+      try {
+        queryParams.filters = typeof filters === 'string' ? JSON.parse(filters) : filters;
+      } catch (e) {
+        // 如果解析失败，忽略筛选参数
+      }
     }
     
     // 添加排序参数
     if (sort) {
-      apiUrl += `&sort=${encodeURIComponent(sort)}`;
+      queryParams.sort = typeof sort === 'string' ? [sort] : sort;
     }
     
     // 添加分页参数
     if (pagination) {
-      apiUrl += `&pagination=${encodeURIComponent(pagination)}`;
+      try {
+        queryParams.pagination = typeof pagination === 'string' ? JSON.parse(pagination) : pagination;
+      } catch (e) {
+        // 如果解析失败，忽略分页参数
+      }
     }
     
-    // 调用Strapi API
+    // 使用 Strapi Client - 通过 collection 方法支持通用 endpoint
     const startTime = Date.now();
-    const response = await strapiClient.get(apiUrl);
+    const result = await strapiClient.collection(endpoint).find(queryParams);
     const responseTime = Date.now() - startTime;
     
     return NextResponse.json({
-      data: response.data,
+      data: result,
       message: "从Strapi获取数据成功",
       endpoint: endpoint,
-      meta: response.data?.meta || null,
+      meta: (result as any)?.meta || null,
       responseTime: `${responseTime}ms`
     });
 
@@ -96,14 +106,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 构建Strapi API URL
-    const apiUrl = `/api/${endpoint}`;
-    
-    // 调用Strapi API
-    const response = await strapiClient.post(apiUrl, { data });
+    // 使用 Strapi Client
+    const collection = strapiClient.collection(endpoint);
+    const result = await collection.create(data);
     
     return NextResponse.json({
-      data: response.data,
+      data: result,
       message: "向Strapi发送数据成功",
       endpoint: endpoint
     });
@@ -134,14 +142,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 构建Strapi API URL
-    const apiUrl = `/api/${endpoint}/${id}`;
-    
-    // 调用Strapi API
-    const response = await strapiClient.put(apiUrl, { data });
+    // 使用 Strapi Client
+    const collection = strapiClient.collection(endpoint);
+    const result = await collection.update(id, data);
     
     return NextResponse.json({
-      data: response.data,
+      data: result,
       message: "更新Strapi数据成功",
       endpoint: endpoint,
       id: id
@@ -173,14 +179,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 构建Strapi API URL
-    const apiUrl = `/api/${endpoint}/${id}`;
-    
-    // 调用Strapi API
-    const response = await strapiClient.delete(apiUrl);
+    // 使用 Strapi Client
+    const collection = strapiClient.collection(endpoint);
+    const result = await collection.delete(id);
     
     return NextResponse.json({
-      data: response.data,
+      data: result,
       message: "删除Strapi数据成功",
       endpoint: endpoint,
       id: id

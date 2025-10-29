@@ -28,17 +28,17 @@ export async function POST(request: NextRequest) {
       expires_at
     };
     
-    const createResponse = await strapiClient.post('/api/activation-cards', {
-      data: cardData
-    });
+    const cards = strapiClient.collection('activation-cards');
+    const createResponse: any = await cards.create(cardData);
     
-    const createdCard: any = createResponse.data?.data;
+    console.log('[激活卡业务API] 创建响应:', JSON.stringify(createResponse, null, 2));
     
-    console.log('[激活卡业务API] 创建响应:', JSON.stringify(createResponse.data, null, 2));
+    // Strapi Client 返回的数据可能在 data 字段中，也可能直接返回数据
+    const createdCard: any = createResponse?.data || createResponse;
     
     if (!createdCard) {
       return NextResponse.json(
-        { error: "激活卡创建失败", details: createResponse.data },
+        { error: "激活卡创建失败", details: createResponse },
         { status: 500 }
       );
     }
@@ -54,15 +54,15 @@ export async function POST(request: NextRequest) {
     const documentId = createdCard.documentId || createdCard.id;
     console.log(`[激活卡业务API] 更新激活卡`, { id: createdCard.id, documentId, assignData });
     
-    const assignResponse = await strapiClient.put(`/api/activation-cards/${documentId}`, {
-      data: assignData
-    });
+    const updateResponse = await cards.update(documentId, assignData);
+    const updatedCard: any = updateResponse?.data || updateResponse;
     
     return NextResponse.json({
-      data: assignResponse.data,
+      data: updatedCard,
       message: "激活卡创建并分配成功",
       card: {
         id: createdCard.id,
+        documentId: createdCard.documentId,
         code: createdCard.code,
         card_type: createdCard.card_type,
         user_id: assigned_to,

@@ -58,13 +58,13 @@ export async function GET(request: NextRequest) {
     
     console.log(`[激活卡业务API] 查询或激活激活码（通过documentId）`, { documentId, user_id });
 
-    // 查找激活卡 - 直接使用 documentId 作为路径参数
-    const cardResponse = await strapiClient.get(
-      `/api/activation-cards/${documentId}?populate=*`
-    );
-    console.log('[激活卡业务API] 查询结果:', cardResponse.data);
+    // 查找激活卡 - 使用 Strapi Client
+    const cards = strapiClient.collection('activation-cards');
+    const cardData = await cards.findOne(documentId, { populate: '*' });
+    console.log('[激活卡业务API] 查询结果 cardData:', cardData);
     
-    const card: ActivationCard = cardResponse.data?.data;
+    // Strapi Client 返回的数据可能在 data 字段中，也可能直接返回数据
+    const card: ActivationCard = (cardData as any)?.data || cardData;
     if (!card) {
       console.error('[激活卡业务API] 激活卡数据为空');
       return NextResponse.json({ error: "激活码不存在" }, { status: 404 });
@@ -114,9 +114,8 @@ async function checkAndMarkExpired(card: ActivationCard): Promise<boolean> {
     const updateId = card.documentId || card.id;
     console.log('[激活卡业务API] 标记激活卡为过期:', { updateId, expires_at: card.expires_at });
     try {
-      await strapiClient.put(`/api/activation-cards/${updateId}`, {
-        data: { activation_status: "expired" }
-      });
+      const cards = strapiClient.collection('activation-cards');
+      await cards.update(updateId, { activation_status: "expired" });
     } catch (error: any) {
       console.error('[激活卡业务API] 标记过期失败:', error.message);
       // 即使更新失败，仍然返回过期状态
@@ -135,13 +134,12 @@ async function activateCard(card: ActivationCard, user_id: string) {
   
   console.log('[激活卡业务API] 激活激活卡:', { updateId, user_id, card_type: card.card_type, expires_at });
   
-  await strapiClient.put(`/api/activation-cards/${updateId}`, {
-    data: {
-      activation_status: "used",
-      used_at,
-      user_id,
-      expires_at
-    }
+  const cards = strapiClient.collection('activation-cards');
+  await cards.update(updateId, {
+    activation_status: "used",
+    used_at,
+    user_id,
+    expires_at
   });
   
   return NextResponse.json({

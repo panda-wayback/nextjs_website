@@ -1,4 +1,4 @@
-import axios from "axios";
+import { strapi } from "@strapi/client";
 
 // 获取 Strapi 配置（支持客户端动态配置）
 export const getStrapiConfig = () => {
@@ -29,16 +29,17 @@ export const getStrapiConfig = () => {
 export const STRAPI_URL = getStrapiConfig().url;
 export const STRAPI_TOKEN = getStrapiConfig().token;
 
-// 创建axios实例（动态配置）
+// 创建 Strapi Client 实例（动态配置）
 export const createStrapiClient = () => {
   const config = getStrapiConfig();
-  return axios.create({
-    baseURL: "http://localhost:1337",
-    headers: {
-      'Content-Type': 'application/json',
-      ...(config.token && { 'Authorization': `Bearer ${"0be36bf5a5794ec255b91daa244a18c2888bafbe78c9867b2565c543ee74277668ea0f65321fbe5941066a15379004e33fed910f4100d44d92068e7e49a27c56a49a4324dbcbf2dcdd9df6084fcbf9fd4af520002b2f12394c818cccb1c59a5997ef4e40f1cb36197bed6817b9722e5290cda1d2f8903f5128ab2e7b8e5fed23"}` })
-    },
-    timeout: 10000, // 10秒超时
+  // 确保 baseURL 包含 /api 路径
+  const baseURL = config.url.endsWith('/api') 
+    ? config.url 
+    : `${config.url}/api`;
+  
+  return strapi({
+    baseURL,
+    auth: "0fea4c14562542f544b2c748c1d514b60272f9d4ffcd6b1d1a17d2951793e9183220ec40902e40eeda8f8a34196aafd7d631fb8813e84b43dc39ddb4a525e0884bbbbe3a7e9b3fb0695d696f2c73b3357b9ab851b47994c956a03ba4e13452f9e5d5e63e762ba7d5ff4060908911b026f867f0f1ef18ccc34bd199b90f89100b",
   });
 };
 

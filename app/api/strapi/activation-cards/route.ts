@@ -18,25 +18,32 @@ export async function GET(request: NextRequest) {
     
     console.log(`[激活卡API] GET请求`, { status, type, populate, sort });
     
-    // 构建查询参数
-    let queryParams = `populate=${populate}&sort=${sort}`;
+    // 构建查询参数对象
+    const queryParamsObj: any = {
+      populate: populate === '*' ? '*' : populate.split(','),
+      sort: sort === 'createdAt:desc' ? ['createdAt:desc'] : [sort],
+    };
     
     // 添加筛选条件
     if (status) {
-      queryParams += `&filters[activation_status][$eq]=${status}`;
+      queryParamsObj.filters = {
+        ...queryParamsObj.filters,
+        activation_status: { $eq: status }
+      };
     }
     if (type) {
-      queryParams += `&filters[card_type][$eq]=${type}`;
+      queryParamsObj.filters = {
+        ...queryParamsObj.filters,
+        card_type: { $eq: type }
+      };
     }
     
-    // 构建Strapi API URL
-    const apiUrl = `/api/activation-cards?${queryParams}`;
-    
-    // 调用Strapi API
-    const response = await strapiClient.get(apiUrl);
+    // 使用 Strapi Client
+    const cards = strapiClient.collection('activation-cards');
+    const result = await cards.find(queryParamsObj);
     
     return NextResponse.json({
-      data: response.data,
+      data: result,
       message: "获取激活卡列表成功"
     });
 
@@ -82,12 +89,13 @@ export async function POST(request: NextRequest) {
         activationCards.push(cardData);
       }
       
-      const response = await strapiClient.post('/api/activation-cards', {
-        data: activationCards
-      });
+      const cards = strapiClient.collection('activation-cards');
+      const results = await Promise.all(
+        activationCards.map(cardData => cards.create(cardData))
+      );
       
       return NextResponse.json({
-        data: response.data,
+        data: results,
         message: `成功创建${count}张激活卡`,
         count: count
       });
@@ -100,12 +108,11 @@ export async function POST(request: NextRequest) {
         expires_at
       };
       
-      const response = await strapiClient.post('/api/activation-cards', {
-        data: cardData
-      });
+      const cards = strapiClient.collection('activation-cards');
+      const result = await cards.create(cardData);
       
       return NextResponse.json({
-        data: response.data,
+        data: result,
         message: "激活卡创建成功"
       });
     }
@@ -184,12 +191,11 @@ export async function PUT(request: NextRequest) {
     }
     
     // 更新激活卡
-    const response = await strapiClient.put(`/api/activation-cards/${id}`, {
-      data: updateData
-    });
+    const cards = strapiClient.collection('activation-cards');
+    const result = await cards.update(id, updateData);
     
     return NextResponse.json({
-      data: response.data,
+      data: result,
       message: message,
       id: id,
       action: action
@@ -224,10 +230,11 @@ export async function DELETE(request: NextRequest) {
     console.log(`[激活卡API] 删除激活卡`, { id });
     
     // 删除激活卡
-    const response = await strapiClient.delete(`/api/activation-cards/${id}`);
+    const cards = strapiClient.collection('activation-cards');
+    const result = await cards.delete(id);
     
     return NextResponse.json({
-      data: response.data,
+      data: result,
       message: "激活卡删除成功",
       id: id
     });

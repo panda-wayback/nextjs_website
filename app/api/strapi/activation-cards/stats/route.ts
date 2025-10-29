@@ -8,9 +8,15 @@ export async function GET(request: NextRequest) {
   try {
     console.log(`[激活卡API] 获取统计信息`);
     
-    // 获取所有激活卡数据
-    const response = await strapiClient.get('/api/activation-cards?pagination[pageSize]=1000');
-    const cards: ActivationCard[] = response.data?.data || [];
+    // 获取所有激活卡数据 - 使用 Strapi Client
+    const cardsCollection = strapiClient.collection('activation-cards');
+    const result = await cardsCollection.find({ 
+      pagination: { pageSize: 1000 } 
+    });
+    // Strapi Client 的 find 可能返回数组或 { data: [...], meta: {...} } 格式
+    const cards: ActivationCard[] = Array.isArray(result) 
+      ? result 
+      : ((result as any)?.data || []);
     
     // 计算统计数据
     const stats: ActivationCardStats = {
