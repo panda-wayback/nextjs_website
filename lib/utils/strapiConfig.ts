@@ -33,10 +33,10 @@ export const STRAPI_TOKEN = getStrapiConfig().token;
 export const createStrapiClient = () => {
   const config = getStrapiConfig();
   return axios.create({
-    baseURL: config.url,
+    baseURL: "http://localhost:1337",
     headers: {
       'Content-Type': 'application/json',
-      ...(config.token && { 'Authorization': `Bearer ${config.token}` })
+      ...(config.token && { 'Authorization': `Bearer ${"0be36bf5a5794ec255b91daa244a18c2888bafbe78c9867b2565c543ee74277668ea0f65321fbe5941066a15379004e33fed910f4100d44d92068e7e49a27c56a49a4324dbcbf2dcdd9df6084fcbf9fd4af520002b2f12394c818cccb1c59a5997ef4e40f1cb36197bed6817b9722e5290cda1d2f8903f5128ab2e7b8e5fed23"}` })
     },
     timeout: 10000, // 10秒超时
   });

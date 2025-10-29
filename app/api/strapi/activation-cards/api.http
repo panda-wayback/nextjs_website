@@ -36,13 +36,5 @@ Content-Type: application/json
   "note": "测试创建并分配"
 }
 
-### 5. 使用激活卡（根据ID，使用 documentId）
-POST {{baseUrl}}{{apiPath}}/use-card/hzv1e2wvw7n0j64oqmdu5s51
-Content-Type: application/json
-
-{
-  "user_id": "user@example.com"
-}
-
 ### 6. 获取统计信息
 GET {{baseUrl}}{{apiPath}}/stats

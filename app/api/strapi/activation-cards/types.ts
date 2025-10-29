@@ -4,7 +4,7 @@
 export type ActivationCardStatus = "unassigned" | "assigned" | "used" | "expired";
 
 // 激活卡类型
-export type ActivationCardType = "test" | "day" | "week" | "month";
+export type ActivationCardType = "test" | "day" | "week" | "month" | "year" | "permanent";
 
 // 激活卡完整数据结构
 export interface ActivationCard {

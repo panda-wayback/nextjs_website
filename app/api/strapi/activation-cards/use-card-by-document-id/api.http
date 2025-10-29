@@ -4,5 +4,5 @@
 @apiPath = /api/strapi/activation-cards/use-card-by-document-id
 
 ### 1. 首次激活激活码（需要 user_id）
-GET {{baseUrl}}{{apiPath}}?documentId=hzv1e2wvw7n0j64oqmdu5s51&user_id=user@example.com
+GET {{baseUrl}}{{apiPath}}?documentId=sx90ccgvwedrt6c8ymmen1ya&user_id=user@example.com
 

@@ -4,6 +4,7 @@ import { strapiClient } from "@/lib/utils/strapiConfig";
 import type { ActivationCard } from "../types";
 
 // 根据激活卡类型计算过期时间
+// 返回过期时间的 ISO 字符串
 function calculateExpirationDate(cardType: string): string {
   const now = new Date();
   let expirationDate = new Date();
@@ -24,6 +25,14 @@ function calculateExpirationDate(cardType: string): string {
     case "month":
       // month: 1个月（30天）
       expirationDate.setMonth(now.getMonth() + 1);
+      break;
+    case "year":
+      // year: 1年（365天）
+      expirationDate.setFullYear(now.getFullYear() + 1);
+      break;
+    case "permanent":
+      // permanent: 永久有效，设置为 100 年后
+      expirationDate.setFullYear(now.getFullYear() + 100);
       break;
     default:
       // 默认使用 day
@@ -49,20 +58,25 @@ export async function GET(request: NextRequest) {
     
     console.log(`[激活卡业务API] 查询或激活激活码（通过documentId）`, { documentId, user_id });
 
-    // 查找激活卡
+    // 查找激活卡 - 直接使用 documentId 作为路径参数
     const cardResponse = await strapiClient.get(
       `/api/activation-cards/${documentId}?populate=*`
     );
+    console.log('[激活卡业务API] 查询结果:', cardResponse.data);
     
     const card: ActivationCard = cardResponse.data?.data;
     if (!card) {
+      console.error('[激活卡业务API] 激活卡数据为空');
       return NextResponse.json({ error: "激活码不存在" }, { status: 404 });
     }
+    
+    console.log('[激活卡业务API] 找到激活卡:', { id: card.id, documentId: card.documentId, status: card.activation_status });
     
     const cardStatus = card.activation_status || "unassigned";
     
     // 检查过期状态
-    if (await checkAndMarkExpired(card)) {
+    const isExpired = await checkAndMarkExpired(card);
+    if (isExpired) {
       return NextResponse.json({ error: "激活卡已过期" }, { status: 400 });
     }
 
@@ -96,9 +110,17 @@ async function checkAndMarkExpired(card: ActivationCard): Promise<boolean> {
   const now = new Date();
   
   if (now > expireDate && card.activation_status !== "expired") {
-    await strapiClient.put(`/api/activation-cards/${card.id}`, {
-      data: { activation_status: "expired" }
-    });
+    // 使用 documentId 更新，如果不存在则使用 id
+    const updateId = card.documentId || card.id;
+    console.log('[激活卡业务API] 标记激活卡为过期:', { updateId, expires_at: card.expires_at });
+    try {
+      await strapiClient.put(`/api/activation-cards/${updateId}`, {
+        data: { activation_status: "expired" }
+      });
+    } catch (error: any) {
+      console.error('[激活卡业务API] 标记过期失败:', error.message);
+      // 即使更新失败，仍然返回过期状态
+    }
     return true;
   }
   
@@ -110,6 +132,8 @@ async function activateCard(card: ActivationCard, user_id: string) {
   const updateId = card.documentId || card.id;
   const expires_at = calculateExpirationDate(card.card_type);
   const used_at = new Date().toISOString();
+  
+  console.log('[激活卡业务API] 激活激活卡:', { updateId, user_id, card_type: card.card_type, expires_at });
   
   await strapiClient.put(`/api/activation-cards/${updateId}`, {
     data: {
