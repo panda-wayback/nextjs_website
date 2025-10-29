@@ -44,6 +44,13 @@ fi
 # 检查构建
 if [ ! -f ".next/BUILD_ID" ]; then
     echo "🔨 构建项目..."
+    
+    # 清理缓存和旧的构建文件
+    echo "🧹 清理缓存文件..."
+    rm -rf .next
+    rm -rf node_modules/.cache
+    
+    # 执行构建
     npm run build
 fi
 
