@@ -35,24 +35,18 @@ if [ -n "$PORT_PID" ]; then
     fi
 fi
 
-# 检查依赖
-if [ ! -d "node_modules" ]; then
-    echo "📦 安装依赖..."
-    npm install
-fi
+# 安装依赖（每次都安装，确保依赖最新）
+echo "📦 安装依赖..."
+npm install
 
-# 检查构建
-if [ ! -f ".next/BUILD_ID" ]; then
-    echo "🔨 构建项目..."
-    
-    # 清理缓存和旧的构建文件
-    echo "🧹 清理缓存文件..."
-    rm -rf .next
-    rm -rf node_modules/.cache
-    
-    # 执行构建
-    npm run build
-fi
+# 清理缓存和旧的构建文件
+echo "🧹 清理缓存文件..."
+rm -rf .next
+rm -rf node_modules/.cache
+
+# 执行构建
+echo "🔨 构建项目..."
+npm run build
 
 # 启动应用
 echo "▶️  启动应用..."
