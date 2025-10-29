@@ -69,14 +69,7 @@ export async function POST(request: NextRequest, context: Context) {
     // 处理 activation_status 为 null 的情况（初始状态视为 unassigned）
     const cardStatus = card.activation_status || "unassigned";
     
-    // 检查激活卡状态
-    if (cardStatus === "used") {
-      return NextResponse.json(
-        { error: "激活卡已被使用" },
-        { status: 400 }
-      );
-    }
-    
+    // 检查激活卡是否过期
     if (cardStatus === "expired") {
       return NextResponse.json(
         { error: "激活卡已过期" },
@@ -84,7 +77,7 @@ export async function POST(request: NextRequest, context: Context) {
       );
     }
     
-    // 检查激活卡是否过期
+    // 检查激活卡是否过期（时间判断）
     if (card.expires_at) {
       const expireDate = new Date(card.expires_at);
       const now = new Date();
@@ -101,9 +94,46 @@ export async function POST(request: NextRequest, context: Context) {
       }
     }
 
-    // 第二步：检查并绑定 user_id
-    // 如果激活卡没有 user_id，则绑定当前用户
-    // 如果激活卡已有 user_id，则检查是否与当前用户一致
+    // 第二步：验证 user_id
+    // 如果激活卡已经被使用（status = "used"），需要验证是否为当前用户使用
+    if (cardStatus === "used") {
+      if (card.user_id && card.user_id === user_id) {
+        // 当前用户正在使用此激活码，返回认证成功
+        return NextResponse.json({
+          verified: true,
+          message: "用户正在使用当前激活码",
+          success: true,
+          card: {
+            id: card.id,
+            card_type: card.card_type,
+            activation_status: "used",
+            used_at: card.used_at,
+            expires_at: card.expires_at
+          }
+        });
+      } else if (card.user_id && card.user_id !== user_id) {
+        // 激活卡已被其他用户使用
+        return NextResponse.json(
+          { 
+            error: "该激活卡已被其他用户使用，无法再次激活",
+            success: false,
+            verified: false
+          },
+          { status: 403 }
+        );
+      } else {
+        // 状态为 used 但没有 user_id（异常情况）
+        return NextResponse.json(
+          { 
+            error: "激活卡已被使用，但缺少用户信息",
+            success: false
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // 第三步：绑定并激活（针对 unassigned 状态）
     // 注意：需要使用 documentId 来更新数据
     const updateId = card.documentId || id;
     
@@ -124,15 +154,13 @@ export async function POST(request: NextRequest, context: Context) {
       });
       
       return NextResponse.json({
-        data: activateResponse.data,
+        verified: true,
         message: "激活卡绑定并激活成功",
         success: true,
         card: {
           id: card.id,
-          code: card.code,
           card_type: card.card_type,
           activation_status: "used",
-          user_id: user_id,
           used_at: activateData.used_at,
           expires_at: expires_at
         }
@@ -150,15 +178,13 @@ export async function POST(request: NextRequest, context: Context) {
       });
       
       return NextResponse.json({
-        data: activateResponse.data,
+        verified: true,
         message: "激活卡激活成功",
         success: true,
         card: {
           id: card.id,
-          code: card.code,
           card_type: card.card_type,
           activation_status: "used",
-          user_id: card.user_id,
           used_at: activateData.used_at,
           expires_at: expires_at
         }
@@ -169,11 +195,7 @@ export async function POST(request: NextRequest, context: Context) {
         { 
           error: "该激活卡已被其他用户绑定，无法使用",
           success: false,
-          card: {
-            id: card.id,
-            code: card.code,
-            user_id: card.user_id
-          }
+          verified: false
         },
         { status: 403 }
       );
@@ -192,12 +214,15 @@ export async function POST(request: NextRequest, context: Context) {
   }
 }
 
-// GET方法 - 查询激活卡状态（根据ID）
+// GET方法 - 查询激活卡状态（根据ID）或验证用户认证
 export async function GET(request: NextRequest, context: Context) {
   try {
     const { id } = await context.params;
     
-    console.log(`[激活卡业务API] 查询激活卡状态`, { id });
+    // 从请求查询参数中获取 user_id
+    const user_id = request.nextUrl.searchParams.get('user_id');
+    
+    console.log(`[激活卡业务API] 查询激活卡状态或验证用户`, { id, user_id });
 
     // 根据ID获取激活卡详情
     const cardResponse = await strapiClient.get(`/api/activation-cards/${id}`);
@@ -224,13 +249,29 @@ export async function GET(request: NextRequest, context: Context) {
       }
     }
     
+    // 如果提供了 user_id，验证用户是否正在使用当前的激活码认证
+    if (user_id) {
+      // 检查 user_id 是否匹配
+      const isUserVerified = card.user_id === user_id;
+      
+      return NextResponse.json({
+        verified: isUserVerified,
+        message: isUserVerified ? "用户认证成功，正在使用当前激活码" : "用户认证失败，user_id 不匹配",
+        card: {
+          id: card.id,
+          card_type: card.card_type,
+          activation_status: isExpired ? "expired" : card.activation_status,
+          expires_at: card.expires_at
+        }
+      });
+    }
+    
+    // 如果没有提供 user_id，返回激活卡公开状态信息（不包含敏感信息）
     return NextResponse.json({
       data: {
         id: card.id,
-        code: card.code,
         card_type: card.card_type,
         activation_status: isExpired ? "expired" : card.activation_status,
-        user_id: card.user_id,
         assigned_to: card.assigned_to,
         assigned_at: card.assigned_at,
         used_at: card.used_at,

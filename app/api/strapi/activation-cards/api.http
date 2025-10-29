@@ -37,21 +37,12 @@ Content-Type: application/json
 }
 
 ### 5. 使用激活卡（根据ID，使用 documentId）
-POST {{baseUrl}}{{apiPath}}/use-card/ogrrm00augdf6c87cfa32gga
+POST {{baseUrl}}{{apiPath}}/use-card/hzv1e2wvw7n0j64oqmdu5s51
 Content-Type: application/json
 
 {
-  "user_id": "test-user-123"
+  "user_id": "user@example.com"
 }
 
-### 6. 使用激活卡（根据激活码）
-POST {{baseUrl}}{{apiPath}}/use-card/by-code
-Content-Type: application/json
-
-{
-  "code": "ABC123",
-  "user_id": "test-user-123"
-}
-
-### 7. 获取统计信息
+### 6. 获取统计信息
 GET {{baseUrl}}{{apiPath}}/stats
