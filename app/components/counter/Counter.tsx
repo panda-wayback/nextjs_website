@@ -12,7 +12,7 @@ import {
   selectStatus,
 } from "@/lib/storage/counter/counterSlice";
 
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/storage/hooks";
 import styles from "./Counter.module.css";
 
 export const Counter = () => {

@@ -1,12 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-interface Context {
-  params: undefined;
-}
-
 // GET方法 - 获取计数器统计信息
-export async function GET(request: NextRequest, context: Context) {
+export async function GET(request: NextRequest) {
   // 模拟统计数据
   const stats = {
     totalIncrements: 150,

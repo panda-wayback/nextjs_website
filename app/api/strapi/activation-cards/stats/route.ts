@@ -3,12 +3,8 @@ import { NextResponse } from "next/server";
 import { strapiClient } from "@/lib/utils/strapiConfig";
 import type { ActivationCard, ActivationCardStats } from "../types";
 
-interface Context {
-  params: undefined;
-}
-
 // GET方法 - 获取激活卡统计信息
-export async function GET(request: NextRequest, context: Context) {
+export async function GET(request: NextRequest) {
   try {
     console.log(`[激活卡API] 获取统计信息`);
     

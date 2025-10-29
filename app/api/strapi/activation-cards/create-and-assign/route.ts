@@ -3,14 +3,10 @@ import { NextResponse } from "next/server";
 import { strapiClient } from "@/lib/utils/strapiConfig";
 import type { ActivationCard, ActivationCardStatus } from "../types";
 
-interface Context {
-  params: undefined;
-}
-
 // 不再需要手动生成激活码，Strapi会自动生成
 
 // POST方法 - 创建激活卡并立即分配给用户
-export async function POST(request: NextRequest, context: Context) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { card_type, assigned_to, note, expires_at } = body;

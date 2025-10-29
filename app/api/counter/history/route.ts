@@ -1,12 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-interface Context {
-  params: undefined;
-}
-
 // GET方法 - 获取计数器历史记录
-export async function GET(request: NextRequest, context: Context) {
+export async function GET(request: NextRequest) {
   // 模拟从数据库获取历史记录
   const history = [
     { id: 1, value: 10, timestamp: "2024-01-01T10:00:00Z", action: "increment" },
@@ -23,7 +19,7 @@ export async function GET(request: NextRequest, context: Context) {
 }
 
 // POST方法 - 添加历史记录
-export async function POST(request: NextRequest, context: Context) {
+export async function POST(request: NextRequest) {
   const body: { value: number; action: string } = await request.json();
   const { value, action } = body;
 

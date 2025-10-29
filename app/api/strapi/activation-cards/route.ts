@@ -7,12 +7,8 @@ import type {
   CreateActivationCardData
 } from "./types";
 
-interface Context {
-  params: undefined;
-}
-
 // GET方法 - 获取激活卡列表
-export async function GET(request: NextRequest, context: Context) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -58,7 +54,7 @@ export async function GET(request: NextRequest, context: Context) {
 }
 
 // POST方法 - 创建激活卡
-export async function POST(request: NextRequest, context: Context) {
+export async function POST(request: NextRequest) {
   try {
     const body: CreateActivationCardData = await request.json();
     const { card_type, note, expires_at, count = 1 } = body;
@@ -135,7 +131,7 @@ export async function POST(request: NextRequest, context: Context) {
 }
 
 // PUT方法 - 使用激活卡（分配、激活、过期）
-export async function PUT(request: NextRequest, context: Context) {
+export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, action, assigned_to } = body;
@@ -213,7 +209,7 @@ export async function PUT(request: NextRequest, context: Context) {
 }
 
 // DELETE方法 - 删除激活卡
-export async function DELETE(request: NextRequest, context: Context) {
+export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
     const { id } = body;

@@ -2,12 +2,8 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { strapiClient } from "@/lib/utils/strapiConfig";
 
-interface Context {
-  params: undefined;
-}
-
 // GET方法 - 从Strapi获取数据
-export async function GET(request: NextRequest, context: Context) {
+export async function GET(request: NextRequest) {
   try {
     // 从查询参数获取endpoint
     const { searchParams } = new URL(request.url);
@@ -88,7 +84,7 @@ export async function GET(request: NextRequest, context: Context) {
 }
 
 // POST方法 - 向Strapi发送数据
-export async function POST(request: NextRequest, context: Context) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { endpoint, data } = body;
@@ -126,7 +122,7 @@ export async function POST(request: NextRequest, context: Context) {
 }
 
 // PUT方法 - 更新Strapi数据
-export async function PUT(request: NextRequest, context: Context) {
+export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { endpoint, id, data } = body;
@@ -165,7 +161,7 @@ export async function PUT(request: NextRequest, context: Context) {
 }
 
 // DELETE方法 - 删除Strapi数据
-export async function DELETE(request: NextRequest, context: Context) {
+export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
     const { endpoint, id } = body;
