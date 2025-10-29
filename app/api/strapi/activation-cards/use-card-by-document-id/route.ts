@@ -112,7 +112,7 @@ async function checkAndMarkExpired(card: ActivationCard): Promise<boolean> {
   
   if (now > expireDate && card.activation_status !== "expired") {
     // 使用 documentId 更新，如果不存在则使用 id
-    const updateId = card.documentId || card.id;
+    const updateId = card.documentId || String(card.id);
     console.log('[激活卡业务API] 标记激活卡为过期:', { updateId, expires_at: card.expires_at });
     try {
       const strapiClient = await getStrapiClient();
@@ -130,7 +130,7 @@ async function checkAndMarkExpired(card: ActivationCard): Promise<boolean> {
 
 // 激活激活码
 async function activateCard(card: ActivationCard, user_id: string, request?: NextRequest) {
-  const updateId = card.documentId || card.id;
+  const updateId = card.documentId || String(card.id);
   const expires_at = calculateExpirationDate(card.card_type);
   const used_at = new Date().toISOString();
   

@@ -21,6 +21,20 @@ if pm2 describe $APP_NAME > /dev/null 2>&1; then
     exit 0
 fi
 
+# 检查端口 3000 是否被占用
+PORT_PID=$(lsof -ti:3000 2>/dev/null || echo "")
+if [ -n "$PORT_PID" ]; then
+    echo "⚠️  端口 3000 被进程 $PORT_PID 占用，正在停止..."
+    kill $PORT_PID 2>/dev/null || true
+    sleep 1
+    # 再次检查
+    PORT_PID=$(lsof -ti:3000 2>/dev/null || echo "")
+    if [ -n "$PORT_PID" ]; then
+        echo "❌ 无法停止占用端口的进程，请手动处理"
+        exit 1
+    fi
+fi
+
 # 检查依赖
 if [ ! -d "node_modules" ]; then
     echo "📦 安装依赖..."
