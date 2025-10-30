@@ -85,11 +85,9 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      if (card.assigned_at) {
-        const assignedDate = new Date(card.assigned_at);
-        if (assignedDate >= sevenDaysAgo) {
-          stats.recentActivity.assignedLast7Days++;
-        }
+      // 统计分配数量（通过 user_id 是否存在来判断是否已分配）
+      if (card.user_id) {
+        stats.recentActivity.assignedLast7Days++;
       }
       
       if (card.used_at) {

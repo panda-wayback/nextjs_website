@@ -195,14 +195,18 @@ function getCardInfo(card: ActivationCard) {
   return NextResponse.json({
     data: {
       id: card.id,
+      documentId: card.documentId,
       code: card.code,
       card_type: card.card_type,
       activation_status: card.activation_status,
-      assigned_to: card.assigned_to,
-      assigned_at: card.assigned_at,
+      user_id: card.user_id,
       used_at: card.used_at,
       expires_at: card.expires_at,
-      note: card.note
+      metadata: card.metadata,
+      note: card.note,
+      createdAt: card.createdAt,
+      updatedAt: card.updatedAt,
+      publishedAt: card.publishedAt
     },
     message: "查询激活码状态成功"
   });

@@ -17,24 +17,29 @@ GET {{baseUrl}}{{apiPath}}
 ### 2. 获取未分配的激活卡
 GET {{baseUrl}}{{apiPath}}?status=unassigned
 
-### 3. 创建激活卡
-POST {{baseUrl}}{{apiPath}}
-Content-Type: application/json
+### 3. 创建激活卡（单个）
+POST {{baseUrl}}{{apiPath}}?card_type=day&note=测试激活卡
 
-{
-  "card_type": "day",
-  "note": "测试激活卡"
-}
+### 3.1 批量创建激活卡
+POST {{baseUrl}}{{apiPath}}?card_type=week&note=批量测试&count=3
 
-### 4. 创建并分配激活卡
-POST {{baseUrl}}{{apiPath}}/create-and-assign
-Content-Type: application/json
+### 4. 创建激活卡（不分配）
+POST {{baseUrl}}{{apiPath}}/create-and-assign?card_type=day&note=测试创建
 
-{
-  "card_type": "year",
-  "assigned_to": "user@example.com",
-  "note": "测试创建并分配"
-}
+### 4.1 创建并分配激活卡（user_id 作为可选参数）
+POST {{baseUrl}}{{apiPath}}/create-and-assign?card_type=year&user_id=user@example.com&note=测试创建并分配
 
-### 6. 获取统计信息
+### 5. 分配激活卡给用户
+PUT {{baseUrl}}{{apiPath}}?id=替换为实际ID&action=assign&user_id=user@example.com
+
+### 5.1 激活激活卡
+PUT {{baseUrl}}{{apiPath}}?id=替换为实际ID&action=activate
+
+### 5.2 标记激活卡为过期
+PUT {{baseUrl}}{{apiPath}}?id=替换为实际ID&action=expire
+
+### 6. 删除激活卡
+DELETE {{baseUrl}}{{apiPath}}?id=替换为实际ID
+
+### 7. 获取统计信息
 GET {{baseUrl}}{{apiPath}}/stats

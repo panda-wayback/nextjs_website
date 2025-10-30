@@ -44,8 +44,7 @@ export async function GET(request: NextRequest) {
     const result = await cards.find(queryParamsObj);
     
     return NextResponse.json({
-      data: result,
-      message: "获取激活卡列表成功"
+      data: result
     });
 
   } catch (error: any) {
@@ -64,8 +63,12 @@ export async function GET(request: NextRequest) {
 // POST方法 - 创建激活卡
 export async function POST(request: NextRequest) {
   try {
-    const body: CreateActivationCardData = await request.json();
-    const { card_type, note, expires_at, count = 1 } = body;
+    // 从路径参数获取所有参数
+    const { searchParams } = new URL(request.url);
+    const card_type = searchParams.get('card_type');
+    const note = searchParams.get('note');
+    const expires_at = searchParams.get('expires_at');
+    const count = parseInt(searchParams.get('count') || '1');
     
     if (!card_type) {
       return NextResponse.json(
@@ -97,9 +100,7 @@ export async function POST(request: NextRequest) {
       );
       
       return NextResponse.json({
-        data: results,
-        message: `成功创建${count}张激活卡`,
-        count: count
+        data: results
       });
     } else {
       // 单个创建激活卡
@@ -115,8 +116,7 @@ export async function POST(request: NextRequest) {
       const result = await cards.create(cardData);
       
       return NextResponse.json({
-        data: result,
-        message: "激活卡创建成功"
+        data: result
       });
     }
 
@@ -143,8 +143,11 @@ export async function POST(request: NextRequest) {
 // PUT方法 - 使用激活卡（分配、激活、过期）
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { id, action, assigned_to } = body;
+    // 从路径参数获取所有参数
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const action = searchParams.get('action');
+    const user_id = searchParams.get('user_id');
     
     if (!id || !action) {
       return NextResponse.json(
@@ -153,7 +156,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.log(`[激活卡API] 使用激活卡`, { id, action, assigned_to });
+    console.log(`[激活卡API] 使用激活卡`, { id, action, user_id });
 
     let updateData: any = {};
     let message = "";
@@ -161,10 +164,15 @@ export async function PUT(request: NextRequest) {
     switch (action) {
       case "assign":
         // 分配激活卡给用户
+        if (!user_id) {
+          return NextResponse.json(
+            { error: "缺少user_id参数" },
+            { status: 400 }
+          );
+        }
         updateData = {
           activation_status: "assigned" as ActivationCardStatus,
-          assigned_to: assigned_to,
-          assigned_at: new Date().toISOString()
+          user_id: user_id
         };
         message = "激活卡分配成功";
         break;
@@ -199,10 +207,7 @@ export async function PUT(request: NextRequest) {
     const result = await cards.update(id, updateData);
     
     return NextResponse.json({
-      data: result,
-      message: message,
-      id: id,
-      action: action
+      data: result
     });
 
   } catch (error: any) {
@@ -221,8 +226,9 @@ export async function PUT(request: NextRequest) {
 // DELETE方法 - 删除激活卡
 export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { id } = body;
+    // 从路径参数获取所有参数
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     
     if (!id) {
       return NextResponse.json(
@@ -239,9 +245,7 @@ export async function DELETE(request: NextRequest) {
     const result = await cards.delete(id);
     
     return NextResponse.json({
-      data: result,
-      message: "激活卡删除成功",
-      id: id
+      data: result
     });
 
   } catch (error: any) {

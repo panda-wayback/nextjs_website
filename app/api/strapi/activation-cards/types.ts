@@ -6,23 +6,23 @@ export type ActivationCardStatus = "unassigned" | "assigned" | "used" | "expired
 // 激活卡类型
 export type ActivationCardType = "test" | "day" | "week" | "month" | "year" | "permanent";
 
-// 激活卡完整数据结构
+// 激活卡完整数据结构（基于 Strapi v5 最新 schema）
 export interface ActivationCard {
-  id: number;
-  documentId?: string; // Strapi文档ID
-  code: string; // 激活码，格式：AC + 时间戳后6位 + 随机4位数字
-  card_type: ActivationCardType; // 激活卡类型
-  activation_status: ActivationCardStatus; // 激活卡状态
+  id: number; // 数值ID（兼容性）
+  documentId: string; // Strapi v5 文档ID（主键）
+  code: string; // 激活码 (UID格式: [A-Z0-9]{18})
+  card_type: ActivationCardType; // 激活卡类型: test | day | week | month | year | permanent
+  activation_status: ActivationCardStatus; // 激活卡状态: unassigned | assigned | used | expired
   user_id?: string; // 绑定的用户ID
-  assigned_to?: string; // 分配给的用户（旧字段，可选）
-  assigned_at?: string; // 分配时间
-  used_at?: string; // 使用时间（注意：实际字段名是 used_at，不是 activated_at）
+  used_at?: string; // 使用时间（激活时间）
   expires_at?: string; // 过期时间
-  metadata?: any; // 元数据
+  metadata?: any; // 元数据（JSON格式）
   note?: string; // 备注
+  
+  // Strapi v5 标准时间戳字段
   createdAt: string; // 创建时间
   updatedAt: string; // 更新时间
-  publishedAt?: string; // 发布时间
+  publishedAt?: string; // 发布时间（draftAndPublish: true）
 }
 
 // 创建激活卡的数据类型
@@ -31,7 +31,7 @@ export interface CreateActivationCardData {
   note?: string;
   expires_at?: string;
   count?: number; // 批量创建数量
-  assigned_to?: string; // 分配给的用户（可选，创建时分配）
+  user_id?: string; // 分配给的用户ID（可选，创建时分配）
 }
 
 // 更新激活卡的数据类型
@@ -39,10 +39,9 @@ export interface UpdateActivationCardData {
   card_type?: ActivationCardType;
   activation_status?: ActivationCardStatus;
   user_id?: string;
-  assigned_to?: string;
-  assigned_at?: string;
-  used_at?: string; // 使用时间（注意：实际字段名是 used_at）
+  used_at?: string; // 使用时间（激活时间）
   expires_at?: string;
+  metadata?: any; // 元数据（JSON格式）
   note?: string;
 }
 
@@ -100,7 +99,6 @@ export interface ActivationCardQueryParams {
   populate?: string;
   sort?: string;
   pagination?: string;
-  assigned_to?: string;
   user_id?: string;
 }
 
