@@ -1,11 +1,11 @@
 ### 激活码查询/激活 API 测试（documentId 版本）
 
-#@baseUrl = http://localhost:3003
-@baseUrl = http://14.103.200.99:3000
+@baseUrl = http://localhost:3000
+#@baseUrl = http://14.103.200.99:3000
 
 
 @apiPath = /api/strapi/activation-cards/use-card-by-document-id
 
 ### 1. 首次激活激活码（需要 user_id）
-GET {{baseUrl}}{{apiPath}}?documentId=s0l01zvpnn32kbrlouehlekd&user_id=user@example.com
+GET {{baseUrl}}{{apiPath}}?documentId=x5gokuhcre44n6f8v83fqnlx&user_id=user@example.com
 
