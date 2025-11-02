@@ -8,6 +8,34 @@ import type {
   ActivationCard,
 } from "@/app/api/strapi/activation-cards/types";
 
+// CORS 辅助函数：为响应添加 CORS headers
+function addCorsHeaders(response: Response, request: Request): Response {
+  const origin = request.headers.get("origin");
+  const headers = new Headers(response.headers);
+  
+  // 如果请求来自特定 origin，使用它；否则允许所有来源（但不使用 credentials）
+  if (origin) {
+    headers.set("Access-Control-Allow-Origin", origin);
+    headers.set("Access-Control-Allow-Credentials", "true");
+  } else {
+    headers.set("Access-Control-Allow-Origin", "*");
+  }
+  
+  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  headers.set("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization");
+  
+  // 如果是 preflight 请求，也设置 Max-Age
+  if (request.method === "OPTIONS") {
+    headers.set("Access-Control-Max-Age", "86400");
+  }
+  
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 const handler = createMcpHandler(
   (server) => {
     // 获取激活卡列表
@@ -554,4 +582,31 @@ const handler = createMcpHandler(
   }
 );
 
-export { handler as GET, handler as POST };
+// 处理 OPTIONS 请求（CORS preflight）
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get("origin");
+  
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": origin || "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization",
+      "Access-Control-Max-Age": "86400",
+      "Vary": "Origin",
+    },
+  });
+}
+
+// 包装 handler 以添加 CORS headers
+async function getWithCors(request: Request) {
+  const response = await handler(request);
+  return addCorsHeaders(response, request);
+}
+
+async function postWithCors(request: Request) {
+  const response = await handler(request);
+  return addCorsHeaders(response, request);
+}
+
+export { getWithCors as GET, postWithCors as POST };
