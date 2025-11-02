@@ -8,7 +8,7 @@
 ###   - week: 1周
 ###   - month: 1个月
 
-@baseUrl = http://localhost:3000
+@baseUrl = http://14.103.200.99:3000
 @apiPath = /api/strapi/activation-cards
 
 ### 1. 获取激活卡列表
